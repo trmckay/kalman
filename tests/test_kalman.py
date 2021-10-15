@@ -5,7 +5,8 @@ from pytest_cases import parametrize_with_cases
 
 @parametrize_with_cases("filter", prefix="filter_")
 @pytest.mark.parametrize("rounds", [10, 100, 1000])
-def test_kalman(filter, rounds):
+@pytest.mark.asyncio
+async def test_kalman(filter, rounds):
     state_vs_time = {}
     for k in filter._state_map.keys():
         state_vs_time[k] = []
@@ -15,8 +16,8 @@ def test_kalman(filter, rounds):
         for k in filter._state_map.keys():
             state_vs_time[k].append(filter.state(k))
 
-        filter.predict()
-        filter.update()
+        await filter.predict()
+        await filter.update()
 
     t = range(rounds)
     for k in filter._state_map.keys():

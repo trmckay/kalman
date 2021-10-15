@@ -19,11 +19,15 @@ class KalmanFilter:
 
         Arguments:
             * `sensors`: A map of string keys to asynchronous functions that return sensor data.
+
             * `sensor_cov`: The sensor covariance matrix.
+
             * `kinematics`: A dictionary that maps state variables to a function that can be used
-               to calculate them. The function will take the list of sensors and the state,
-               and return a float.
+              to calculate them. The function will take the list of sensors and the state,
+              and return a float.
+
             * `state`: List of state variables given as their name and initial value.
+
             * `state_cov`: The state covariance matrix.
         """
 
@@ -42,18 +46,20 @@ class KalmanFilter:
             self._state_map[v] = i
 
     def __repr__(self) -> str:
-        state_vars = self._state_map.keys()
-        state_vars = list(map(lambda k: (k, self.state(k)), state_vars))
-        return str(state_vars)
+        return str(self.dump_state())
 
     def state(self, k) -> float:
         return self._state[self._state_map[k]]
 
-    def sensor(self, k) -> float:
-        return self._sensor_map[k]()
+    def dump_state(self) -> list[tuple[str, float]]:
+        state_vars = self._state_map.keys()
+        return list(map(lambda k: (k, self.state(k)), state_vars))
 
-    def predict(self):
+    async def sensor(self, k) -> float:
+        return await self._sensors_map[k]()
+
+    async def predict(self):
         pass
 
-    def update(self):
+    async def update(self):
         pass
