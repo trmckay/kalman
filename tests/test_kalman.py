@@ -1,76 +1,27 @@
 import pytest
-import numpy as np
-
-from kalman.sensors import Gps, Encoder
-from kalman import KalmanFilter
+import matplotlib.pyplot as plt
+from pytest_cases import parametrize_with_cases
 
 
-@pytest.fixture(scope="function")
-def gps(gps_randomness):
-    gps = [
-        Gps("x", randomness=gps_randomness),
-        Gps("y", randomness=gps_randomness),
-        Gps("z", randomness=3 * gps_randomness),
-    ]
-    yield gps
+@parametrize_with_cases("filter", prefix="filter_")
+@pytest.mark.parametrize("rounds", [10, 100, 1000])
+def test_kalman(filter, rounds):
+    state_vs_time = {}
+    for k in filter._state_map.keys():
+        state_vs_time[k] = []
 
+    for _ in range(rounds):
 
-@pytest.fixture(scope="function")
-def encoders(encoder_randomness):
-    encoders = [Encoder(randomness=encoder_randomness) for _ in range(2)]
-    yield encoders
+        for k in filter._state_map.keys():
+            state_vs_time[k].append(filter.state(k))
 
+        filter.predict()
+        filter.update()
 
-@pytest.fixture(scope="function")
-def filter(encoders, gps):
-    # Sensors contributing to the filter, each with a name.
-    sensors = {
-       "gps_x": gps[0],
-       "gps_y": gps[1],
-       "gps_z": gps[2],
-       "enc_l": encoders[0],
-       "enc_r": encoders[1],
-    }
-
-    # Covariance matrix for the sensor readings.
-    sensor_cov = np.array([
-        [1, 0, 0, 0, 0],
-        [0, 1, 0, 0, 0],
-        [0, 0, 1, 0, 0],
-        [0, 0, 0, 1, 0],
-        [0, 0, 0, 0, 1],
-    ])
-
-    # State variables and their initial values.
-    state = [
-        ("x", 0),
-        ("y", 2),
-        ("z", 5),
-        ("theta", 0),
-    ]
-
-    # Covariance matrix for the state variables.
-    state_cov = np.array([
-        [1, 0, 0, 0],
-        [0, 1, 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1],
-    ])
-
-    # Kinematics model for the system.
-    kinematics = {
-        "x": lambda f: f.sensor("gps_x"),
-        "y": lambda f: f.sensor("gps_y"),
-        "z": lambda f: f.sensor("gps_z"),
-        "theta": lambda f: f.sensor("enc_r"),
-    }
-
-    yield KalmanFilter(sensors, sensor_cov, kinematics, state, state_cov)
-
-@pytest.mark.parametrize("gps_randomness", [1, 5, 10])
-@pytest.mark.parametrize("encoder_randomness", [0.1, 0.5, 1])
-class TestKalman:
-    def test_kalman(self, filter, gps_randomness, encoder_randomness):
-        assert filter.state("x") == 0
-        assert filter.state("y") == 2
-        assert filter.state("z") == 5
+    t = range(rounds)
+    for k in filter._state_map.keys():
+        plt.plot(t, state_vs_time[k])
+        plt.title(f"{k} vs. time ({rounds} time-steps)")
+        plt.xlabel("time")
+        plt.ylabel(k)
+        plt.show()
