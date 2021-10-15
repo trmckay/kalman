@@ -1,0 +1,25 @@
+[project]
+name = "kalman"
+version = "0.0.0"
+description = "Sample Kalman filter implementation"
+license = "GPLv3"
+authors = ["Trevor McKay <trmckay@calpoly.edu>"]
+maintainers = ["Trevor McKay <trmckay@calpoly.edu>"]
+readme = ""
+homepage = ""
+repository = ""
+documentation = ""
+dependencies = [
+  'numpy',
+  'matplotlib',
+  'pytest',
+]
+
+packages = [
+    { include = "kalman" },
+]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
