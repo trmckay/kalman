@@ -15,20 +15,63 @@ class KalmanFilter:
         state: list[tuple[str, float]],
         state_cov: np.ndarray,
     ):
-        """Create a Kalman filter.
+        """
+        Create a Kalman filter.
 
-        Arguments:
-            * `sensors`: A map of string keys to asynchronous functions that return sensor data.
+        :param sensors: A map of string keys to asynchronous functions that return sensor data.
 
-            * `sensor_cov`: The sensor covariance matrix.
+        :param sensor_cov: The sensor covariance matrix.
 
-            * `kinematics`: A dictionary that maps state variables to a function that can be used
-              to calculate them. The function will take the list of sensors and the state,
-              and return a float.
+        :param kinematics: A dictionary that maps each state variable to it's calcution.
 
-            * `state`: List of state variables given as their name and initial value.
+        :param state: List of state variables given as their name and initial value.
 
-            * `state_cov`: The state covariance matrix.
+        :param state_cov: The state covariance matrix.
+
+        Example::
+
+            sensors = {
+                "gps_x": read_gps_x,
+                "gps_y": read_gps_y,
+                "enc_l": read_encoder_l,
+                "enc_r": read_encoder_r,
+            }
+
+            # Covariance matrix for the sensor readings.
+            sensor_cov = np.array(
+                [
+                    [1, 0, 0, 0],
+                    [0, 1, 0, 0],
+                    [0, 0, 1, 0],
+                    [0, 0, 0, 1],
+                ]
+            )
+
+            # State variables and their initial values.
+            state = [
+                ("x", 0),
+                ("y", 2),
+                ("theta", 0),
+            ]
+
+            # Covariance matrix for the state variables.
+            state_cov = np.array(
+                [
+                    [1, 0, 0],
+                    [0, 1, 0],
+                    [0, 0, 1],
+                    [0, 0, 0],
+                ]
+            )
+
+            # Kinematics model for the system.
+            kinematics = {
+                "x": lambda f: f.sensor("gps_x"),
+                "y": lambda f: f.sensor("gps_y"),
+                "theta": lambda f: f.sensor("enc_r"),
+            }
+
+            kf = KalmanFilter(sensors, sensor_cov, kinematics, state, state_cov)
         """
 
         # Covariance is NxN and there are N sensors.
